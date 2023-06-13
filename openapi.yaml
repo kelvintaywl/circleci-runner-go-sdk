@@ -1,0 +1,280 @@
+swagger: "2.0"
+info:
+  description: "This is the (unofficial) CircleCI Runner API for managing CircleCI Runner resources."
+  version: "1.0.0"
+  title: "CircleCI V2 API"
+host: "runner.circleci.com"
+basePath: "/api"
+schemes:
+- "https"
+securityDefinitions:
+  api_token:
+    type: "apiKey"
+    name: "Circle-Token"
+    in: "header"
+security:
+  - api_token: []
+
+paths:
+  /v2/runner/resource:
+    get:
+      tags:
+      - "resource-class"
+      summary: "List Runner resource classes by namespace."
+      description: "List Runner resource classes by namespace."
+      operationId: "ListResourceClasses"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"      
+      parameters:
+      - name: "namespace"
+        in: "query"
+        type: "string"
+        required: true
+        description: "Namespace to filter by."
+      responses:
+        "200":
+          description: "A sequence of Runner resource-classes"
+          schema:
+            $ref: "#/definitions/ResourceClassesInfo"
+        "400":
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/Errored"
+        "404":
+          description: "Not Found"
+          schema:
+            $ref: "#/definitions/Errored"
+    post:
+      tags:
+      - "resource-class"
+      summary: "Create a Runner resource-class."
+      description: "Create a Runner resource-class."
+      operationId: "CreateResourceClass"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"      
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Runner resource-class information (payload)"
+        required: true
+        schema:
+          $ref: "#/definitions/ResourceClassPayload"
+      responses:
+        "201":
+          description: "A Runner resource-class object"
+          schema:
+            $ref: "#/definitions/ResourceClassInfo"
+        "400":
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/Errored"
+        "404":
+          description: "Not Found"
+          schema:
+            $ref: "#/definitions/Errored"
+  /v2/runner/resource/{id}:
+    delete:
+      tags:
+      - "resource-class"
+      summary: "Delete a Runner resource-class."
+      description: "Delete a Runner resource-class. Ensure associated tokens are deleted first."
+      operationId: "DeleteResourceClass"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"      
+      parameters:
+      - name: "id"
+        in: "path"
+        type: "string"
+        format: "uuid"
+        required: true
+        description: "Runner resource-class ID."
+      responses:
+        "204":
+          description: "Runner resource-class was deleted successfully."
+        "400":
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/Errored"
+        "404":
+          description: "Not Found"
+          schema:
+            $ref: "#/definitions/Errored"
+  /v2/runner/token:
+    get:
+      tags:
+        - "token"
+      summary: "List tokens for a Runner resource-class."
+      description: "List tokens for a Runner resource-class."
+      operationId: "ListTokens"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"      
+      parameters:
+      - name: "resource-class"
+        in: "query"
+        type: "string"
+        description: "Runner resource-class name (namespace/name)"
+        required: true
+      responses:
+        "200":
+          description: "A sequence of Runner tokens"
+          schema:
+            $ref: "#/definitions/TokensInfo"
+        "400":
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/Errored"
+        "404":
+          description: "Not Found"
+          schema:
+            $ref: "#/definitions/Errored"
+    post:
+      tags:
+      - "token"
+      summary: "Create a token for a Runner resource-class."
+      description: "Create a token for a Runner resource-class."
+      operationId: "CreateToken"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"      
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Runner token information (payload)"
+        required: true
+        schema:
+          $ref: "#/definitions/TokenPayload"
+      responses:
+        "201":
+          description: "A Runner token object"
+          schema:
+            $ref: "#/definitions/TokenCreated"
+        "400":
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/Errored"
+        "404":
+          description: "Not Found"
+          schema:
+            $ref: "#/definitions/Errored"
+  /v2/runner/token/{id}:
+    delete:
+      tags:
+      - "token"
+      summary: "Delete a Runner token."
+      description: "Delete a Runner token."
+      operationId: "DeleteToken"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"      
+      parameters:
+      - name: "id"
+        in: "path"
+        type: "string"
+        format: "uuid"
+        required: true
+        description: "Runner token ID."
+      responses:
+        "204":
+          description: "Runner token was deleted successfully."
+        "400":
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/Errored"
+        "404":
+          description: "Not Found"
+          schema:
+            $ref: "#/definitions/Errored"
+
+definitions:
+  ResourceClassPayload:
+    type: object
+    required:
+      - "resource_class"
+      - "description"
+    properties: 
+      resource_class:
+        type: "string"
+        description: "Runner resource-class name (namespace/name)"
+      description:
+        type: "string"
+        description: "Description of Runner resource-class"
+  ResourceClassesInfo:
+    type: "object"
+    properties: 
+      items:
+        type: "array"
+        items:
+          $ref: "#/definitions/ResourceClassInfo"
+  ResourceClassInfo:
+    allOf:
+      - $ref: "#/definitions/ResourceClassPayload"
+      - type: "object"
+        required:
+          - "id"
+        properties: 
+          id:
+            type: "string"
+            format: "uuid"
+            description: "Unique ID of Runner resource-class"
+  TokenPayload:
+    type: "object"
+    required:
+      - "resource_class"
+      - "nickname"
+    properties:
+      resource_class:
+        type: "string"
+        description: "Runner resource-class name (namespace/name)"
+      nickname:
+        type: "string"
+        description: "alias for token"
+  TokenInfo:
+    allOf:
+      - $ref: "#/definitions/TokenPayload"
+      - type: "object"
+        required:
+          - "id"
+          - "created_at"
+        properties: 
+          id:
+            type: "string"
+            format: "uuid"
+            description: "Unique ID for Runner token."
+          created_at:
+            type: "string"
+            format: "date-time"
+            description: "Date and time the Runner token was created."
+  TokenCreated:
+    allOf:
+      - $ref: "#/definitions/TokenInfo"
+      - type: "object"
+        properties:
+          token:
+            type: "string"
+            description: "token value (sensitive)"
+  TokensInfo:
+    type: "object"
+    properties: 
+      items:
+        type: "array"
+        items:
+          $ref: "#/definitions/TokenInfo"
+  Errored:
+    type: "object"
+    properties: 
+      message:
+        type: "string"
+        description: "Error message" 
+externalDocs:
+  description: "Based on the CircleCI CLI codebase around Runner."
+  url: "https://github.com/CircleCI-Public/circleci-cli/blob/develop/api/runner/runner.go"
